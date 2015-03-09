@@ -33,9 +33,6 @@ TableViewDataSource.swift
 	public init(fetchedResultsController: NSFetchedResultsController, cellFactory: CellFactory, tableView: UITableView? = nil)
 	public func performFetch(error: NSErrorPointer = nil) -> Bool
 CollectionViewDataSource.swift
-	public protocol CollectionViewCellFactoryType
-	func cellForItem(item: DataItem, inCollectionView collectionView: UICollectionView, atIndexPath indexPath: NSIndexPath) -> Cell
-	func configureCell(cell: Cell, forItem item: DataItem, inCollectionView collectionView: UICollectionView, atIndexPath indexPath: NSIndexPath) -> Cell
 	public struct CollectionViewCellFactory <Cell: UICollectionViewCell, DataItem>: CollectionViewCellFactoryType
 	public let reuseIdentifier: String
 	public init(reuseIdentifier: String, cellConfigurator: ConfigurationHandler)
