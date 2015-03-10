@@ -76,9 +76,6 @@ CollectionViewDataSource.swift
 	public var dataSource: UICollectionViewDataSource
 	public init(fetchedResultsController: NSFetchedResultsController, cellFactory: CellFactory, supplementaryViewFactory: SupplementaryViewFactory? = nil, collectionView: UICollectionView? = nil)
 	public func performFetch(error: NSErrorPointer = nil) -> Bool
-TitledCollectionReusableView.swift
-	public override var backgroundColor: UIColor?
-	public override func prepareForReuse()
 FetchedResultsDelegate.swift
 	public final class CollectionViewFetchedResultsDelegateProvider <DataItem>
 	public weak var collectionView: UICollectionView?
