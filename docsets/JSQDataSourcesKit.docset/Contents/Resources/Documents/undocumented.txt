@@ -77,16 +77,8 @@ CollectionViewDataSource.swift
 	public init(fetchedResultsController: NSFetchedResultsController, cellFactory: CellFactory, supplementaryViewFactory: SupplementaryViewFactory? = nil, collectionView: UICollectionView? = nil)
 	public func performFetch(error: NSErrorPointer = nil) -> Bool
 TitledCollectionReusableView.swift
-	public var label: UILabel
-	public var leftSpacing: NSLayoutConstraint
-	public var topSpacing: NSLayoutConstraint
-	public var rightSpacing: NSLayoutConstraint
-	public var bottomSpacing: NSLayoutConstraint
 	public override var backgroundColor: UIColor?
-	public class var identifier: String
-	public class var nib: UINib
 	public override func prepareForReuse()
-	public func configureWithHandler(handler: ConfigurationHandler)
 FetchedResultsDelegate.swift
 	public final class CollectionViewFetchedResultsDelegateProvider <DataItem>
 	public weak var collectionView: UICollectionView?
