@@ -22,6 +22,20 @@ import JSQDataSourcesKit
 
 
 class CollectionViewController: UICollectionViewController {
+    
+    enum SectionColor: Int {
+        case First
+        case Second
+        case Third
+        
+        var color: UIColor {
+            switch self {
+            case .First: return UIColor.redColor()
+            case .Second: return UIColor.greenColor()
+            case .Third: return UIColor.blueColor()
+            }
+        }
+    }
 
     typealias CellFactory = CollectionViewCellFactory<CollectionViewCell, CellViewModel>
     typealias HeaderViewFactory = TitledCollectionReusableViewFactory<CellViewModel>
@@ -43,7 +57,8 @@ class CollectionViewController: UICollectionViewController {
         // 2. create cell factory
         let cellFactory = CollectionViewCellFactory(reuseIdentifier: CellId) {
             (cell: CollectionViewCell, model: CellViewModel, collectionView: UICollectionView, indexPath: NSIndexPath) -> CollectionViewCell in
-            cell.label.text = model.text + "\n\(indexPath.section), \(indexPath.item)"
+            cell.label.text = model.text
+            cell.backgroundColor = SectionColor(rawValue: indexPath.section)?.color
             return cell
         }
 
@@ -63,6 +78,10 @@ class CollectionViewController: UICollectionViewController {
             sections: allSections,
             cellFactory: cellFactory,
             supplementaryViewFactory: headerFactory,
-            collectionView: collectionView)
+            userMovedHandler: { collectionView, cell, model, fromIndexPath, toIndexPath in
+                cell.backgroundColor = SectionColor(rawValue: toIndexPath.section)?.color
+            },
+            collectionView: collectionView
+        )
     }
 }
