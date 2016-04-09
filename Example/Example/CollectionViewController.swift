@@ -78,11 +78,10 @@ class CollectionViewController: UICollectionViewController {
             sections: allSections,
             cellFactory: cellFactory,
             supplementaryViewFactory: headerFactory,
-            collectionView: collectionView,
-            userMovedHandler: { collectionView, model, fromIndexPath, toIndexPath in
-                if let cell = collectionView.cellForItemAtIndexPath(toIndexPath) as? CollectionViewCell {
-                    cell.backgroundColor = SectionColor(rawValue: toIndexPath.section)?.color
-                }
-        })
+            userMovedHandler: { collectionView, cell, model, fromIndexPath, toIndexPath in
+                cell.backgroundColor = SectionColor(rawValue: toIndexPath.section)?.color
+            },
+            collectionView: collectionView
+        )
     }
 }

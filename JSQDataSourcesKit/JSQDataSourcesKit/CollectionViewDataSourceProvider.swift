@@ -40,6 +40,9 @@ public final class CollectionViewDataSourceProvider <
 
     /// The type of elements for the data source provider.
     public typealias Item = SectionInfo.Item
+    
+    /// A function for reacting to a user move of an item
+    public typealias UserMovedHandler = (UICollectionView, CellFactory.Cell, Item,  NSIndexPath, NSIndexPath) -> Void
 
 
     // MARK: Properties
@@ -52,14 +55,11 @@ public final class CollectionViewDataSourceProvider <
 
     /// Returns the supplementary view factory for this data source provider, or `nil` if it does not exist.
     public let supplementaryViewFactory: SupplementaryViewFactory?
-
+    
     /// Returns the object that provides the data for the collection view.
     public var dataSource: UICollectionViewDataSource { return bridgedDataSource }
     
-    public typealias UserMovedHandler = (UICollectionView, Item, NSIndexPath, NSIndexPath) -> Void
-    /// Enables drag 'n' drop reordering when set
-    public let userMovedHandler: UserMovedHandler?
-    
+
     // MARK: Initialization
 
     /**
@@ -68,6 +68,7 @@ public final class CollectionViewDataSourceProvider <
     - parameter sections:                 The sections to display in the collection view.
     - parameter cellFactory:              The cell factory from which the collection view data source will dequeue cells.
     - parameter supplementaryViewFactory: The supplementary view factory from which the collection view data source will dequeue supplementary views.
+    - parameter userMovedHandler:         Enables drag 'n' drop reordering when set. Called whenever a user moves an item to a new index path.
     - parameter collectionView:           The collection view whose data source will be provided by this provider.
 
     - returns: A new `CollectionViewDataSourceProvider` instance.
@@ -76,12 +77,12 @@ public final class CollectionViewDataSourceProvider <
         sections: [SectionInfo],
         cellFactory: CellFactory,
         supplementaryViewFactory: SupplementaryViewFactory? = nil,
-        collectionView: UICollectionView? = nil,
-        userMovedHandler: UserMovedHandler? = nil) {
+        userMovedHandler: UserMovedHandler? = nil,
+        collectionView: UICollectionView? = nil) {
             self.sections = sections
             self.cellFactory = cellFactory
             self.supplementaryViewFactory = supplementaryViewFactory
-            self.userMovedHandler = userMovedHandler
+            self.moveHandler = userMovedHandler.flatMap(moveHandlerForUserMovedHandler)
             collectionView?.dataSource = dataSource
     }
 
@@ -129,17 +130,7 @@ public final class CollectionViewDataSourceProvider <
 
     // MARK: Private
     
-    private var moveHandler: BridgedCollectionViewDataSource.MoveHandler? {
-        guard let userMovedHandler = self.userMovedHandler else {
-            return nil
-        }
-        
-        return { collectionView, sourceIndexPath, destinationIndexPath in
-            let item = self.sections[sourceIndexPath.section].items.removeAtIndex(sourceIndexPath.item)
-            self.sections[destinationIndexPath.section].items.insert(item, atIndex: destinationIndexPath.item)
-            userMovedHandler(collectionView, item, sourceIndexPath, destinationIndexPath)
-        }
-    }
+    private var moveHandler: BridgedCollectionViewDataSource.MoveHandler?
     
     private lazy var bridgedDataSource: BridgedCollectionViewDataSource = BridgedCollectionViewDataSource(
         numberOfSections: { [unowned self] () -> Int in
@@ -166,7 +157,22 @@ public final class CollectionViewDataSourceProvider <
             // from `collectionView(_:layout:referenceSizeForHeaderInSection:)`
             fatalError("Attempt to dequeue unknown or invalid supplementary view <\(kind)> "
                 + "for collection view <\(collectionView)> at indexPath <\(indexPath)>")
-        }, moveHandler: self.moveHandler)
+        },
+        moveHandler: self.moveHandler)
+    
+    private func moveHandlerForUserMovedHandler(userMovedHandler: UserMovedHandler) -> BridgedCollectionViewDataSource.MoveHandler {
+        
+        return { collectionView, sourceIndexPath, destinationIndexPath in
+            let item = self.sections[sourceIndexPath.section].items.removeAtIndex(sourceIndexPath.item)
+            self.sections[destinationIndexPath.section].items.insert(item, atIndex: destinationIndexPath.item)
+            
+            guard let cell = collectionView.cellForItemAtIndexPath(destinationIndexPath) as? CellFactory.Cell else {
+                fatalError("No cell for moved item")
+            }
+            
+            userMovedHandler(collectionView, cell, item, sourceIndexPath, destinationIndexPath)
+        }
+    }
 }
 
 
@@ -267,7 +273,7 @@ public final class CollectionViewFetchedResultsDataSourceProvider <
             // from `collectionView(_:layout:referenceSizeForHeaderInSection:)`
             fatalError("Attempt to dequeue unknown or invalid supplementary view <\(kind)> "
                 + "for collection view <\(collectionView)> at indexPath <\(indexPath)>")
-        }, moveHandler: )
+        }, moveHandler: nil )
 }
 
 
