@@ -38,6 +38,8 @@ public final class TableViewDataSourceProvider <
     /// The type of elements for the data source provider.
     public typealias Item = SectionInfo.Item
 
+    /// A function for reacting to a user move of a row
+    public typealias UserMovedHandler = (UITableView, CellFactory.Cell, Item,  NSIndexPath, NSIndexPath) -> Void
 
     // MARK: Properties
 
@@ -56,16 +58,22 @@ public final class TableViewDataSourceProvider <
     /**
     Constructs a new data source provider for a table view.
 
-    - parameter sections:    The sections to display in the table view.
-    - parameter cellFactory: The cell factory from which the table view data source will dequeue cells.
-    - parameter tableView:   The table view whose data source will be provided by this provider.
+    - parameter sections:         The sections to display in the table view.
+    - parameter cellFactory:      The cell factory from which the table view data source will dequeue cells.
+    - parameter userMovedHandler: Enables drag 'n' drop reordering when set. Called whenever a user moves a row to a new index path.
+    - parameter tableView:        The table view whose data source will be provided by this provider.
 
     - returns: A new `TableViewDataSourceProvider` instance.
     */
-    public init(sections: [SectionInfo], cellFactory: CellFactory, tableView: UITableView? = nil) {
-        self.sections = sections
-        self.cellFactory = cellFactory
-        tableView?.dataSource = dataSource
+    public init(
+        sections: [SectionInfo],
+        cellFactory: CellFactory,
+        userMovedHandler: UserMovedHandler? = nil,
+        tableView: UITableView? = nil) {
+            self.sections = sections
+            self.cellFactory = cellFactory
+            self.userMovedHandler = userMovedHandler
+            tableView?.dataSource = dataSource
     }
 
 
@@ -110,6 +118,8 @@ public final class TableViewDataSourceProvider <
 
     // MARK: Private
 
+    private var userMovedHandler: UserMovedHandler?
+    
     private lazy var bridgedDataSource: BridgedTableViewDataSource = BridgedTableViewDataSource(
         numberOfSections: { [unowned self] () -> Int in
             self.sections.count
@@ -127,7 +137,23 @@ public final class TableViewDataSourceProvider <
         },
         titleForFooterInSection: { [unowned self] (section) -> String? in
             self.sections[section].footerTitle
-        })
+        },
+        moveHandler: self.userMovedHandler.flatMap(self.tableViewMoveHandlerForUserMovedHandler))
+    
+    private func tableViewMoveHandlerForUserMovedHandler(userMovedHandler: UserMovedHandler) -> BridgedTableViewDataSource.MoveHandler {
+        
+        return { tableView, sourceIndexPath, destinationIndexPath in
+            let item = self.sections[sourceIndexPath.section].items.removeAtIndex(sourceIndexPath.item)
+            self.sections[destinationIndexPath.section].items.insert(item, atIndex: destinationIndexPath.item)
+            
+            // Dispatch to main queue so UITableView can update its internal state
+            NSOperationQueue.mainQueue().addOperationWithBlock {
+                if let cell = tableView.cellForRowAtIndexPath(destinationIndexPath) as? CellFactory.Cell {
+                    userMovedHandler(tableView, cell, item, sourceIndexPath, destinationIndexPath)
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -223,24 +249,28 @@ Keep responsibilies focused.
     typealias CellForRowAtIndexPathHandler = (UITableView, NSIndexPath) -> UITableViewCell
     typealias TitleForHeaderInSectionHandler = (Int) -> String?
     typealias TitleForFooterInSectionHandler = (Int) -> String?
+    typealias MoveHandler = (UITableView, NSIndexPath, NSIndexPath) -> Void
 
     let numberOfSections: NumberOfSectionsHandler
     let numberOfRowsInSection: NumberOfRowsInSectionHandler
     let cellForRowAtIndexPath: CellForRowAtIndexPathHandler
     let titleForHeaderInSection: TitleForHeaderInSectionHandler
     let titleForFooterInSection: TitleForFooterInSectionHandler
+    let moveHandler: MoveHandler?
 
     init(numberOfSections: NumberOfSectionsHandler,
         numberOfRowsInSection: NumberOfRowsInSectionHandler,
         cellForRowAtIndexPath: CellForRowAtIndexPathHandler,
         titleForHeaderInSection: TitleForHeaderInSectionHandler,
-        titleForFooterInSection: TitleForFooterInSectionHandler) {
+        titleForFooterInSection: TitleForFooterInSectionHandler,
+        moveHandler: MoveHandler? = nil) {
 
             self.numberOfSections = numberOfSections
             self.numberOfRowsInSection = numberOfRowsInSection
             self.cellForRowAtIndexPath = cellForRowAtIndexPath
             self.titleForHeaderInSection = titleForHeaderInSection
             self.titleForFooterInSection = titleForFooterInSection
+            self.moveHandler = moveHandler
     }
 
     @objc func numberOfSectionsInTableView(tableView: UITableView) -> Int {
@@ -261,5 +291,13 @@ Keep responsibilies focused.
     
     @objc func tableView(tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         return titleForFooterInSection(section)
+    }
+    
+    @objc func tableView(tableView: UITableView, canMoveRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return moveHandler != nil
+    }
+    
+    @objc func tableView(tableView: UITableView, moveRowAtIndexPath sourceIndexPath: NSIndexPath, toIndexPath destinationIndexPath: NSIndexPath) {
+        moveHandler?(tableView, sourceIndexPath, destinationIndexPath)
     }
 }
