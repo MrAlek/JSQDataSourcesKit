@@ -29,6 +29,7 @@ class TableViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        editing = true
 
         // 1. create view models
         let section0 = TableViewSection(items: CellViewModel(), CellViewModel(), CellViewModel(), headerTitle: "First")
@@ -44,7 +45,21 @@ class TableViewController: UITableViewController {
         }
 
         // 3. create data source provider
-        dataSourceProvider = TableViewDataSourceProvider(sections: allSections, cellFactory: factory, tableView: tableView)
+        dataSourceProvider = TableViewDataSourceProvider(
+            sections: allSections,
+            cellFactory: factory,
+            userMovedHandler: { tableView, cell, model, fromIndexPath, toIndexPath in
+                cell.detailTextLabel?.text = "\(toIndexPath.section), \(toIndexPath.row)"
+            },
+            tableView: tableView
+        )
     }
 
+    override func tableView(tableView: UITableView, editingStyleForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCellEditingStyle {
+        return .None
+    }
+    
+    override func tableView(tableView: UITableView, shouldIndentWhileEditingRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return false
+    }
 }
