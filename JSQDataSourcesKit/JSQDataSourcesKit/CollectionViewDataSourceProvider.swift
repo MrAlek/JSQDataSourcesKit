@@ -82,7 +82,7 @@ public final class CollectionViewDataSourceProvider <
             self.sections = sections
             self.cellFactory = cellFactory
             self.supplementaryViewFactory = supplementaryViewFactory
-            self.moveHandler = userMovedHandler.flatMap(moveHandlerForUserMovedHandler)
+            self.userMovedHandler = userMovedHandler
             collectionView?.dataSource = dataSource
     }
 
@@ -130,7 +130,7 @@ public final class CollectionViewDataSourceProvider <
 
     // MARK: Private
     
-    private var moveHandler: BridgedCollectionViewDataSource.MoveHandler?
+    private var userMovedHandler: UserMovedHandler?
     
     private lazy var bridgedDataSource: BridgedCollectionViewDataSource = BridgedCollectionViewDataSource(
         numberOfSections: { [unowned self] () -> Int in
@@ -158,9 +158,9 @@ public final class CollectionViewDataSourceProvider <
             fatalError("Attempt to dequeue unknown or invalid supplementary view <\(kind)> "
                 + "for collection view <\(collectionView)> at indexPath <\(indexPath)>")
         },
-        moveHandler: self.moveHandler)
+        moveHandler: self.userMovedHandler.flatMap(self.collectionViewMoveHandlerForUserMovedHandler))
     
-    private func moveHandlerForUserMovedHandler(userMovedHandler: UserMovedHandler) -> BridgedCollectionViewDataSource.MoveHandler {
+    private func collectionViewMoveHandlerForUserMovedHandler(userMovedHandler: UserMovedHandler) -> BridgedCollectionViewDataSource.MoveHandler {
         
         return { collectionView, sourceIndexPath, destinationIndexPath in
             let item = self.sections[sourceIndexPath.section].items.removeAtIndex(sourceIndexPath.item)
@@ -273,7 +273,7 @@ public final class CollectionViewFetchedResultsDataSourceProvider <
             // from `collectionView(_:layout:referenceSizeForHeaderInSection:)`
             fatalError("Attempt to dequeue unknown or invalid supplementary view <\(kind)> "
                 + "for collection view <\(collectionView)> at indexPath <\(indexPath)>")
-        }, moveHandler: nil )
+    })
 }
 
 
@@ -330,11 +330,11 @@ Keep responsibilies focused.
             return supplementaryViewAtIndexPath(collectionView, kind, indexPath)
     }
     
-    @objc func collectionView(collectionView: UICollectionView, moveItemAtIndexPath sourceIndexPath: NSIndexPath, toIndexPath destinationIndexPath: NSIndexPath) {
-        moveHandler?(collectionView, sourceIndexPath, destinationIndexPath)
-    }
-    
     @objc func collectionView(collectionView: UICollectionView, canMoveItemAtIndexPath indexPath: NSIndexPath) -> Bool {
         return moveHandler != nil
+    }
+    
+    @objc func collectionView(collectionView: UICollectionView, moveItemAtIndexPath sourceIndexPath: NSIndexPath, toIndexPath destinationIndexPath: NSIndexPath) {
+        moveHandler?(collectionView, sourceIndexPath, destinationIndexPath)
     }
 }
