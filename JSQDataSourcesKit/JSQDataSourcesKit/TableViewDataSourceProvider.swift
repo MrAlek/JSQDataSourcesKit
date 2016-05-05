@@ -142,7 +142,7 @@ public final class TableViewDataSourceProvider <
     
     private func tableViewMoveHandlerForUserMovedHandler(userMovedHandler: UserMovedHandler) -> BridgedTableViewDataSource.MoveHandler {
         
-        return { tableView, sourceIndexPath, destinationIndexPath in
+        return { [unowned self] tableView, sourceIndexPath, destinationIndexPath in
             let item = self.sections[sourceIndexPath.section].items.removeAtIndex(sourceIndexPath.item)
             self.sections[destinationIndexPath.section].items.insert(item, atIndex: destinationIndexPath.item)
             
