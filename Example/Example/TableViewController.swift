@@ -51,12 +51,9 @@ class TableViewController: UITableViewController {
             userMovedHandler: { tableView, cell, model, fromIndexPath, toIndexPath in
                 cell.detailTextLabel?.text = "\(toIndexPath.section), \(toIndexPath.row)"
             },
+            editHandler: { _, _, _, _, _ in },
             tableView: tableView
         )
-    }
-
-    override func tableView(tableView: UITableView, editingStyleForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCellEditingStyle {
-        return .None
     }
     
     override func tableView(tableView: UITableView, shouldIndentWhileEditingRowAtIndexPath indexPath: NSIndexPath) -> Bool {

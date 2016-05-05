@@ -41,6 +41,9 @@ public final class TableViewDataSourceProvider <
     /// A function for reacting to a user move of a row
     public typealias UserMovedHandler = (UITableView, CellFactory.Cell, Item,  NSIndexPath, NSIndexPath) -> Void
 
+    /// A function for reacting to an insertion or deletion of a row
+    public typealias EditHandler = (UITableView, CellFactory.Cell, Item, UITableViewCellEditingStyle, NSIndexPath) -> Void
+    
     // MARK: Properties
 
     /// The sections in the table view
@@ -69,10 +72,12 @@ public final class TableViewDataSourceProvider <
         sections: [SectionInfo],
         cellFactory: CellFactory,
         userMovedHandler: UserMovedHandler? = nil,
+        editHandler: EditHandler? = nil,
         tableView: UITableView? = nil) {
             self.sections = sections
             self.cellFactory = cellFactory
             self.userMovedHandler = userMovedHandler
+            self.editHandler = editHandler
             tableView?.dataSource = dataSource
     }
 
@@ -120,6 +125,8 @@ public final class TableViewDataSourceProvider <
 
     private var userMovedHandler: UserMovedHandler?
     
+    private var editHandler: EditHandler?
+    
     private lazy var bridgedDataSource: BridgedTableViewDataSource = BridgedTableViewDataSource(
         numberOfSections: { [unowned self] () -> Int in
             self.sections.count
@@ -138,7 +145,8 @@ public final class TableViewDataSourceProvider <
         titleForFooterInSection: { [unowned self] (section) -> String? in
             self.sections[section].footerTitle
         },
-        moveHandler: self.userMovedHandler.flatMap(self.tableViewMoveHandlerForUserMovedHandler))
+        moveHandler: self.userMovedHandler.flatMap(self.tableViewMoveHandlerForUserMovedHandler),
+        editHandler: self.editHandler.flatMap(self.tableViewEditHandlerForEditHandler))
     
     private func tableViewMoveHandlerForUserMovedHandler(userMovedHandler: UserMovedHandler) -> BridgedTableViewDataSource.MoveHandler {
         
@@ -152,6 +160,26 @@ public final class TableViewDataSourceProvider <
                     userMovedHandler(tableView, cell, item, sourceIndexPath, destinationIndexPath)
                 }
             }
+        }
+    }
+    
+    private func tableViewEditHandlerForEditHandler(editHandler: EditHandler) -> BridgedTableViewDataSource.EditHandler {
+        
+        return { [unowned self] tableView, editingStyle, indexPath in
+            guard let cell = tableView.cellForRowAtIndexPath(indexPath) as? CellFactory.Cell else {
+                fatalError("Couldn't get cell for edited index path")
+            }
+            let section = self.sections[indexPath.section]
+            let item = section.items[indexPath.row]
+            
+            if editingStyle ~= .Delete {
+                var items = section.items
+                items.removeAtIndex(indexPath.row)
+                self.sections[indexPath.section].items = items
+                tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+            }
+            
+            editHandler(tableView, cell, item, editingStyle, indexPath)
         }
     }
 }
@@ -250,6 +278,7 @@ Keep responsibilies focused.
     typealias TitleForHeaderInSectionHandler = (Int) -> String?
     typealias TitleForFooterInSectionHandler = (Int) -> String?
     typealias MoveHandler = (UITableView, NSIndexPath, NSIndexPath) -> Void
+    typealias EditHandler = (UITableView, UITableViewCellEditingStyle, NSIndexPath) -> Void
 
     let numberOfSections: NumberOfSectionsHandler
     let numberOfRowsInSection: NumberOfRowsInSectionHandler
@@ -257,13 +286,15 @@ Keep responsibilies focused.
     let titleForHeaderInSection: TitleForHeaderInSectionHandler
     let titleForFooterInSection: TitleForFooterInSectionHandler
     let moveHandler: MoveHandler?
+    let editHandler: EditHandler?
 
     init(numberOfSections: NumberOfSectionsHandler,
         numberOfRowsInSection: NumberOfRowsInSectionHandler,
         cellForRowAtIndexPath: CellForRowAtIndexPathHandler,
         titleForHeaderInSection: TitleForHeaderInSectionHandler,
         titleForFooterInSection: TitleForFooterInSectionHandler,
-        moveHandler: MoveHandler? = nil) {
+        moveHandler: MoveHandler? = nil,
+        editHandler: EditHandler? = nil) {
 
             self.numberOfSections = numberOfSections
             self.numberOfRowsInSection = numberOfRowsInSection
@@ -271,6 +302,7 @@ Keep responsibilies focused.
             self.titleForHeaderInSection = titleForHeaderInSection
             self.titleForFooterInSection = titleForFooterInSection
             self.moveHandler = moveHandler
+            self.editHandler = editHandler
     }
 
     @objc func numberOfSectionsInTableView(tableView: UITableView) -> Int {
@@ -299,5 +331,13 @@ Keep responsibilies focused.
     
     @objc func tableView(tableView: UITableView, moveRowAtIndexPath sourceIndexPath: NSIndexPath, toIndexPath destinationIndexPath: NSIndexPath) {
         moveHandler?(tableView, sourceIndexPath, destinationIndexPath)
+    }
+    
+    @objc func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return editHandler != nil
+    }
+    
+    @objc func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
+        editHandler?(tableView, editingStyle, indexPath)
     }
 }
