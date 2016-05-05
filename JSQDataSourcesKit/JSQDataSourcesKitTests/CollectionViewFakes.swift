@@ -58,6 +58,13 @@ class FakeCollectionView: UICollectionView {
     }
 }
 
+class FakeCollectionViewReturningFakeCells: FakeCollectionView {
+    
+    override func cellForItemAtIndexPath(indexPath: NSIndexPath) -> UICollectionViewCell? {
+        return FakeCollectionCell()
+    }
+}
+
 
 let FakeSupplementaryViewKind = "FakeSupplementaryViewKind"
 

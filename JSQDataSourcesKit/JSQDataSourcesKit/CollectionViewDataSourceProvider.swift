@@ -162,7 +162,7 @@ public final class CollectionViewDataSourceProvider <
     
     private func collectionViewMoveHandlerForUserMovedHandler(userMovedHandler: UserMovedHandler) -> BridgedCollectionViewDataSource.MoveHandler {
         
-        return { collectionView, sourceIndexPath, destinationIndexPath in
+        return { [unowned self] collectionView, sourceIndexPath, destinationIndexPath in
             let item = self.sections[sourceIndexPath.section].items.removeAtIndex(sourceIndexPath.item)
             self.sections[destinationIndexPath.section].items.insert(item, atIndex: destinationIndexPath.item)
             

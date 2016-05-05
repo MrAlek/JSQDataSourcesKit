@@ -187,4 +187,83 @@ class CollectionViewDataSourceTests: XCTestCase {
         }
     }
     
+    func test_ThatCollectionViewDataSource_ReturnsFalseOnCanMoveItemAtIndexPath_ForNilUserMovedHandler() {
+        // GIVEN: a collection view section
+        let section = CollectionViewSection(items: FakeViewModel())
+        
+        // GIVEN: a cell factory
+        let cellFactory = CollectionViewCellFactory(reuseIdentifier: fakeCellReuseId) { (cell: FakeCollectionCell, _: FakeViewModel, _, _) in
+            return cell
+        }
+        
+        // GIVEN: a supplementary view factory
+        let supplementaryViewFactory = CollectionSupplementaryViewFactory(reuseIdentifier: fakeSupplementaryViewReuseId) { (view: FakeCollectionSupplementaryView, model: FakeViewModel, _, _, _) in
+            return view
+        }
+        
+        // GIVEN: a data source provider without a userMovedHandler
+        let dataSourceProvider = CollectionViewDataSourceProvider(
+            sections: [section],
+            cellFactory: cellFactory,
+            supplementaryViewFactory: supplementaryViewFactory,
+            collectionView: fakeCollectionView)
+        
+        let dataSource = dataSourceProvider.dataSource
+
+        // WHEN: we call canMoveItemAtIndexPath
+        let canMove = dataSource.collectionView!(fakeCollectionView, canMoveItemAtIndexPath: NSIndexPath(forItem: 0, inSection: 0))
+        
+        // THEN: the return value should be false
+        XCTAssertFalse(canMove, "Data source should return false for canMoveItemAtIndexPath if a userMovedHandler was not provided")
+    }
+    
+    func test_ThatCollectionViewDataSource_CallsUserMovedHandler_WhenReorderingItems() {
+        
+        // GIVEN: a collection view which always returns a cell for any index path
+        let fakeCollectionView = FakeCollectionViewReturningFakeCells(frame: CGRect(x: 0, y: 0, width: 320, height: 600), collectionViewLayout: FakeFlowLayout())
+        
+        // GIVEN: some collection view sections
+        let section = CollectionViewSection(items: FakeViewModel(), FakeViewModel())
+        
+        // GIVEN: a cell factory
+        let cellFactory = CollectionViewCellFactory(reuseIdentifier: fakeCellReuseId) { (cell: FakeCollectionCell, _: FakeViewModel, _, _) in
+            return cell
+        }
+        
+        // GIVEN: a supplementary view factory
+        let supplementaryViewFactory = CollectionSupplementaryViewFactory(reuseIdentifier: fakeSupplementaryViewReuseId) { (view: FakeCollectionSupplementaryView, model: FakeViewModel, _, _, _) in
+            return view
+        }
+        
+        let userMovedExpectation = expectationWithDescription("cell_factory_\(__FUNCTION__)")
+        
+        // GIVEN: a data source provider with a userMovedHandler
+        let dataSourceProvider = CollectionViewDataSourceProvider(
+            sections: [section],
+            cellFactory: cellFactory,
+            supplementaryViewFactory: supplementaryViewFactory,
+            userMovedHandler: { _, _, _, _, _ in
+                userMovedExpectation.fulfill()
+            },
+            collectionView: fakeCollectionView)
+        
+        let dataSource = dataSourceProvider.dataSource
+        
+        // WHEN: we call canMoveItemAtIndexPath
+        let canMove = dataSource.collectionView!(fakeCollectionView, canMoveItemAtIndexPath: NSIndexPath(forItem: 0, inSection: 0))
+        
+        // THEN: the return value should be true
+        XCTAssertTrue(canMove, "Data source should return true for canMoveItemAtIndexPath if a userMovedHandler was provided")
+        
+        let fromIndexPath = NSIndexPath(forItem: 0, inSection: 0)
+        let toIndexPath = NSIndexPath(forItem: 1, inSection: 0)
+        
+        // WHEN: we call moveItemAtIndexPath
+        dataSource.collectionView?(fakeCollectionView, moveItemAtIndexPath: fromIndexPath, toIndexPath: toIndexPath)
+        
+        // THEN: the collection view data source provider calls its `UserMoveHandler`
+        waitForExpectationsWithTimeout(DefaultTimeout, handler: { (error) -> Void in
+            XCTAssertNil(error, "Expectations should not output error")
+        })
+    }
 }
