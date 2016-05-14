@@ -164,4 +164,70 @@ class TableViewDataSourceTests: XCTestCase {
         }
     }
     
+    func test_ThatTableViewDataSource_ReturnsFalseOnCanMoveRowAtIndexPath_ForNilUserMovedHandler() {
+        
+        // GIVEN: a single TableViewSection with a data item
+        let section = TableViewSection(items: FakeViewModel())
+        
+        // GIVEN: a cell factory
+        let factory = TableViewCellFactory(reuseIdentifier: fakeReuseId)
+        { (cell: FakeTableCell, _: FakeViewModel, _, _) -> FakeTableCell in
+            return cell
+        }
+        
+        // GIVEN: a data source provider without a userMovedHandler
+        let dataSourceProvider = TableViewDataSourceProvider(sections: [section], cellFactory: factory, tableView: fakeTableView)
+        let dataSource = dataSourceProvider.dataSource
+        
+        // WHEN: we call canMoveRowAtIndexPath
+        let canMove = dataSource.tableView!(fakeTableView, canMoveRowAtIndexPath: NSIndexPath(forRow: 0, inSection: 0))
+        
+        // THEN: the return value should be false
+        XCTAssertFalse(canMove, "Data source should return false for canMoveRowAtIndexPath if a userMovedHandler was not provided")
+    }
+    
+    func test_ThatTableViewDataSource_CallsUserMovedHandler_WhenReorderingItems() {
+        
+        // GIVEN: a single TableViewSection with data items
+        let section = TableViewSection(items: FakeViewModel(), FakeViewModel())
+        
+        // GIVEN: a cell factory
+        let factory = TableViewCellFactory(reuseIdentifier: fakeReuseId)
+        { (cell: FakeTableCell, _: FakeViewModel, _, _) -> FakeTableCell in
+            return cell
+        }
+        
+        let userMovedExpectation = expectationWithDescription("cell_factory_\(__FUNCTION__)")
+        
+        // GIVEN: a data source provider without a userMovedHandler
+        let dataSourceProvider = TableViewDataSourceProvider(
+            sections: [section],
+            cellFactory: factory,
+            userMovedHandler: { _, _, _, _, _ in
+                userMovedExpectation.fulfill()
+            },
+            tableView: fakeTableView)
+        let dataSource = dataSourceProvider.dataSource
+        
+        // WHEN: we call canMoveRowAtIndexPath
+        let canMove = dataSource.tableView!(fakeTableView, canMoveRowAtIndexPath: NSIndexPath(forRow: 0, inSection: 0))
+        
+        // THEN: the return value should be true
+        XCTAssertTrue(canMove, "Data source should return true for canMoveRowAtIndexPath if a userMovedHandler was provided")
+        
+        
+        let fromIndexPath = NSIndexPath(forRow: 0, inSection: 0)
+        let toIndexPath = NSIndexPath(forRow: 1, inSection: 0)
+        
+        // WHEN: we call moveItemAtIndexPath after triggering cell dequeuing
+        dataSource.tableView(fakeTableView, cellForRowAtIndexPath: fromIndexPath)
+        dataSource.tableView!(fakeTableView, moveRowAtIndexPath: fromIndexPath, toIndexPath: toIndexPath)
+        
+        // THEN: the collection view data source provider calls its `UserMoveHandler`
+        waitForExpectationsWithTimeout(DefaultTimeout, handler: { (error) -> Void in
+            XCTAssertNil(error, "Expectations should not output error")
+        })
+        
+    }
+    
 }
