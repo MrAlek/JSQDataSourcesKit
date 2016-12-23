@@ -64,10 +64,7 @@ public final class CollectionViewFetchedResultsDelegateProvider <CellFactory: Co
     public init(
         collectionView: UICollectionView,
         cellFactory: CellFactory,
-        fetchedResultsController: NSFetchedResultsController) {
-            assert(fetchedResultsController: fetchedResultsController,
-                fetchesObjectsOfClass: Item.self as! AnyClass)
-
+        fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>) {
             self.collectionView = collectionView
             self.cellFactory = cellFactory
             fetchedResultsController.delegate = delegate
@@ -86,15 +83,15 @@ public final class CollectionViewFetchedResultsDelegateProvider <CellFactory: Co
 
     // MARK: Private
 
-    private typealias SectionChangeTuple = (changeType: NSFetchedResultsChangeType, sectionIndex: Int)
-    private var sectionChanges = [SectionChangeTuple]()
+    fileprivate typealias SectionChangeTuple = (changeType: NSFetchedResultsChangeType, sectionIndex: Int)
+    fileprivate var sectionChanges = [SectionChangeTuple]()
 
-    private typealias ObjectChangeTuple = (changeType: NSFetchedResultsChangeType, indexPaths: [NSIndexPath])
-    private var objectChanges = [ObjectChangeTuple]()
+    fileprivate typealias ObjectChangeTuple = (changeType: NSFetchedResultsChangeType, indexPaths: [IndexPath])
+    fileprivate var objectChanges = [ObjectChangeTuple]()
 
-    private var updatedObjects = [NSIndexPath: Item]()
+    fileprivate var updatedObjects = [IndexPath: Item]()
 
-    private lazy var bridgedDelegate: BridgedFetchedResultsDelegate = BridgedFetchedResultsDelegate(
+    fileprivate lazy var bridgedDelegate: BridgedFetchedResultsDelegate = BridgedFetchedResultsDelegate(
         willChangeContent: { [unowned self] (controller) in
             self.sectionChanges.removeAll()
             self.objectChanges.removeAll()
@@ -103,23 +100,23 @@ public final class CollectionViewFetchedResultsDelegateProvider <CellFactory: Co
         didChangeSection: { [unowned self] (controller, sectionInfo, sectionIndex, changeType) in
             self.sectionChanges.append((changeType, sectionIndex))
         },
-        didChangeObject: { [unowned self] (controller, anyObject, indexPath: NSIndexPath?, changeType, newIndexPath: NSIndexPath?) in
+        didChangeObject: { [unowned self] (controller, anyObject, indexPath: IndexPath?, changeType, newIndexPath: IndexPath?) in
             switch changeType {
-            case .Insert:
+            case .insert:
                 if let insertIndexPath = newIndexPath {
                     self.objectChanges.append((changeType, [insertIndexPath]))
                 }
-            case .Delete:
+            case .delete:
                 if let deleteIndexPath = indexPath {
                     self.objectChanges.append((changeType, [deleteIndexPath]))
                 }
-            case .Update:
+            case .update:
                 if let indexPath = indexPath {
                     self.objectChanges.append((changeType, [indexPath]))
                     self.updatedObjects[indexPath] = anyObject as? Item
                 }
-            case .Move:
-                if let old = indexPath, new = newIndexPath {
+            case .move:
+                if let old = indexPath, let new = newIndexPath {
                     self.objectChanges.append((changeType, [old, new]))
                 }
             }
@@ -135,41 +132,41 @@ public final class CollectionViewFetchedResultsDelegateProvider <CellFactory: Co
                 })
         })
 
-    private func applyObjectChanges() {
+    fileprivate func applyObjectChanges() {
         for (changeType, indexPaths) in objectChanges {
 
             switch(changeType) {
-            case .Insert:
-                collectionView?.insertItemsAtIndexPaths(indexPaths)
-            case .Delete:
-                collectionView?.deleteItemsAtIndexPaths(indexPaths)
-            case .Update:
+            case .insert:
+                collectionView?.insertItems(at: indexPaths)
+            case .delete:
+                collectionView?.deleteItems(at: indexPaths)
+            case .update:
                 if let indexPath = indexPaths.first,
-                    item = updatedObjects[indexPath],
-                    cell = collectionView?.cellForItemAtIndexPath(indexPath) as? CellFactory.Cell,
-                    view = collectionView {
+                    let item = updatedObjects[indexPath],
+                    let cell = collectionView?.cellForItem(at: indexPath) as? CellFactory.Cell,
+                    let view = collectionView {
                         cellFactory.configureCell(cell, forItem: item, inCollectionView: view, atIndexPath: indexPath)
                 }
-            case .Move:
+            case .move:
                 if let deleteIndexPath = indexPaths.first {
-                    self.collectionView?.deleteItemsAtIndexPaths([deleteIndexPath])
+                    self.collectionView?.deleteItems(at: [deleteIndexPath])
                 }
 
                 if let insertIndexPath = indexPaths.last {
-                    self.collectionView?.insertItemsAtIndexPaths([insertIndexPath])
+                    self.collectionView?.insertItems(at: [insertIndexPath])
                 }
             }
         }
     }
 
-    private func applySectionChanges() {
+    fileprivate func applySectionChanges() {
         for (changeType, sectionIndex) in sectionChanges {
-            let section = NSIndexSet(index: sectionIndex)
+            let section = IndexSet(integer: sectionIndex)
 
             switch(changeType) {
-            case .Insert:
+            case .insert:
                 collectionView?.insertSections(section)
-            case .Delete:
+            case .delete:
                 collectionView?.deleteSections(section)
             default:
                 break
@@ -177,7 +174,7 @@ public final class CollectionViewFetchedResultsDelegateProvider <CellFactory: Co
         }
     }
 
-    private func reloadSupplementaryViewsIfNeeded() {
+    fileprivate func reloadSupplementaryViewsIfNeeded() {
         if sectionChanges.count > 0 {
             collectionView?.reloadData()
         }
@@ -225,10 +222,7 @@ public final class TableViewFetchedResultsDelegateProvider <CellFactory: TableVi
 
     - returns: A new `TableViewFetchedResultsDelegateProvider` instance.
     */
-    public init(tableView: UITableView, cellFactory: CellFactory, fetchedResultsController: NSFetchedResultsController) {
-        assert(fetchedResultsController: fetchedResultsController,
-            fetchesObjectsOfClass: Item.self as! AnyClass)
-
+    public init(tableView: UITableView, cellFactory: CellFactory, fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>) {
         self.tableView = tableView
         self.cellFactory = cellFactory
         fetchedResultsController.delegate = delegate
@@ -247,43 +241,43 @@ public final class TableViewFetchedResultsDelegateProvider <CellFactory: TableVi
 
     // MARK: Private
 
-    private lazy var bridgedDelegate: BridgedFetchedResultsDelegate = BridgedFetchedResultsDelegate(
+    fileprivate lazy var bridgedDelegate: BridgedFetchedResultsDelegate = BridgedFetchedResultsDelegate(
         willChangeContent: { [unowned self] (controller) in
             self.tableView?.beginUpdates()
         },
         didChangeSection: { [unowned self] (controller, sectionInfo, sectionIndex, changeType) in
             switch changeType {
-            case .Insert:
-                self.tableView?.insertSections(NSIndexSet(index: sectionIndex), withRowAnimation: .Fade)
-            case .Delete:
-                self.tableView?.deleteSections(NSIndexSet(index: sectionIndex), withRowAnimation: .Fade)
+            case .insert:
+                self.tableView?.insertSections(IndexSet(integer: sectionIndex), with: .fade)
+            case .delete:
+                self.tableView?.deleteSections(IndexSet(integer: sectionIndex), with: .fade)
             default:
                 break
             }
         },
         didChangeObject: { [unowned self] (controller, anyObject, indexPath, changeType, newIndexPath) in
             switch changeType {
-            case .Insert:
+            case .insert:
                 if let insertIndexPath = newIndexPath {
-                    self.tableView?.insertRowsAtIndexPaths([insertIndexPath], withRowAnimation: .Fade)
+                    self.tableView?.insertRows(at: [insertIndexPath], with: .fade)
                 }
-            case .Delete:
+            case .delete:
                 if let deleteIndexPath = indexPath {
-                    self.tableView?.deleteRowsAtIndexPaths([deleteIndexPath], withRowAnimation: .Fade)
+                    self.tableView?.deleteRows(at: [deleteIndexPath], with: .fade)
                 }
-            case .Update:
+            case .update:
                 if let indexPath = indexPath,
-                    cell = self.tableView?.cellForRowAtIndexPath(indexPath) as? CellFactory.Cell,
-                    view = self.tableView {
+                    let cell = self.tableView?.cellForRow(at: indexPath) as? CellFactory.Cell,
+                    let view = self.tableView {
                         self.cellFactory.configureCell(cell, forItem: anyObject as! Item, inTableView: view, atIndexPath: indexPath)
                 }
-            case .Move:
+            case .move:
                 if let deleteIndexPath = indexPath {
-                    self.tableView?.deleteRowsAtIndexPaths([deleteIndexPath], withRowAnimation: .Fade)
+                    self.tableView?.deleteRows(at: [deleteIndexPath], with: .fade)
                 }
 
                 if let insertIndexPath = newIndexPath {
-                    self.tableView?.insertRowsAtIndexPaths([insertIndexPath], withRowAnimation: .Fade)
+                    self.tableView?.insertRows(at: [insertIndexPath], with: .fade)
                 }
             }
         },
@@ -300,20 +294,20 @@ Keep responsibilies focused.
 */
 @objc private final class BridgedFetchedResultsDelegate: NSObject, NSFetchedResultsControllerDelegate {
 
-    typealias WillChangeContentHandler = (NSFetchedResultsController) -> Void
-    typealias DidChangeSectionHandler = (NSFetchedResultsController, NSFetchedResultsSectionInfo, Int, NSFetchedResultsChangeType) -> Void
-    typealias DidChangeObjectHandler = (NSFetchedResultsController, AnyObject, NSIndexPath?, NSFetchedResultsChangeType, NSIndexPath?) -> Void
-    typealias DidChangeContentHandler = (NSFetchedResultsController) -> Void
+    typealias WillChangeContentHandler = (NSFetchedResultsController<NSFetchRequestResult>) -> Void
+    typealias DidChangeSectionHandler = (NSFetchedResultsController<NSFetchRequestResult>, NSFetchedResultsSectionInfo, Int, NSFetchedResultsChangeType) -> Void
+    typealias DidChangeObjectHandler = (NSFetchedResultsController<NSFetchRequestResult>, AnyObject, IndexPath?, NSFetchedResultsChangeType, IndexPath?) -> Void
+    typealias DidChangeContentHandler = (NSFetchedResultsController<NSFetchRequestResult>) -> Void
 
     let willChangeContent: WillChangeContentHandler
     let didChangeSection: DidChangeSectionHandler
     let didChangeObject: DidChangeObjectHandler
     let didChangeContent: DidChangeContentHandler
 
-    init(willChangeContent: WillChangeContentHandler,
-        didChangeSection: DidChangeSectionHandler,
-        didChangeObject: DidChangeObjectHandler,
-        didChangeContent: DidChangeContentHandler) {
+    init(willChangeContent: @escaping WillChangeContentHandler,
+        didChangeSection: @escaping DidChangeSectionHandler,
+        didChangeObject: @escaping DidChangeObjectHandler,
+        didChangeContent: @escaping DidChangeContentHandler) {
 
             self.willChangeContent = willChangeContent
             self.didChangeSection = didChangeSection
@@ -321,28 +315,28 @@ Keep responsibilies focused.
             self.didChangeContent = didChangeContent
     }
 
-    @objc func controllerWillChangeContent(controller: NSFetchedResultsController) {
+    @objc func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         willChangeContent(controller)
     }
 
     @objc func controller(
-        controller: NSFetchedResultsController,
-        didChangeSection sectionInfo: NSFetchedResultsSectionInfo,
-        atIndex sectionIndex: Int,
-        forChangeType type: NSFetchedResultsChangeType) {
+        _ controller: NSFetchedResultsController<NSFetchRequestResult>,
+        didChange sectionInfo: NSFetchedResultsSectionInfo,
+        atSectionIndex sectionIndex: Int,
+        for type: NSFetchedResultsChangeType) {
             didChangeSection(controller, sectionInfo, sectionIndex, type)
     }
 
     @objc func controller(
-        controller: NSFetchedResultsController,
-        didChangeObject anObject: AnyObject,
-        atIndexPath indexPath: NSIndexPath?,
-        forChangeType type: NSFetchedResultsChangeType,
-        newIndexPath: NSIndexPath?) {
-            didChangeObject(controller, anObject, indexPath, type, newIndexPath)
+        _ controller: NSFetchedResultsController<NSFetchRequestResult>,
+        didChange anObject: Any,
+        at indexPath: IndexPath?,
+        for type: NSFetchedResultsChangeType,
+        newIndexPath: IndexPath?) {
+            didChangeObject(controller, anObject as AnyObject, indexPath, type, newIndexPath)
     }
     
-    @objc func controllerDidChangeContent(controller: NSFetchedResultsController) {
+    @objc func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         didChangeContent(controller)
     }
 }

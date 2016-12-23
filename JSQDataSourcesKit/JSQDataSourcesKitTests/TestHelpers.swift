@@ -18,10 +18,10 @@
 
 import Foundation
 
-let DefaultTimeout = NSTimeInterval(5)
+let DefaultTimeout = TimeInterval(5)
 
 struct FakeViewModel: Equatable, CustomStringConvertible {
-    let name = NSUUID().UUIDString
+    let name = UUID().uuidString
 
     var description: String {
         get {

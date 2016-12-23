@@ -44,7 +44,7 @@ public protocol CollectionViewCellFactoryType {
 
     - returns: An initialized or dequeued `UICollectionViewCell` of type `Cell`.
     */
-    func cellForItem(item: Item, inCollectionView collectionView: UICollectionView, atIndexPath indexPath: NSIndexPath) -> Cell
+    func cellForItem(_ item: Item, inCollectionView collectionView: UICollectionView, atIndexPath indexPath: IndexPath) -> Cell
 
     /**
      Configures and returns the specified cell.
@@ -56,5 +56,5 @@ public protocol CollectionViewCellFactoryType {
 
      - returns: A configured `UICollectionViewCell` of type `Cell`.
      */
-    func configureCell(cell: Cell, forItem item: Item, inCollectionView collectionView: UICollectionView, atIndexPath indexPath: NSIndexPath) -> Cell
+    func configureCell(_ cell: Cell, forItem item: Item, inCollectionView collectionView: UICollectionView, atIndexPath indexPath: IndexPath) -> Cell
 }

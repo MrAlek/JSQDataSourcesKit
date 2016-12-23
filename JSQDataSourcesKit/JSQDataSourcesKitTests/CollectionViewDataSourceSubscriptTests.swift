@@ -34,7 +34,7 @@ class CollectionViewDataSourceSubscriptTests: XCTestCase {
         let allSections = [section0, section1, section2]
 
         // GIVEN: a cell factory
-        let factory = CollectionViewCellFactory(reuseIdentifier: "cellId") { (cell: FakeCollectionCell, model: FakeViewModel, view: UICollectionView, index: NSIndexPath) -> FakeCollectionCell in
+        let factory = CollectionViewCellFactory(reuseIdentifier: "cellId") { (cell: FakeCollectionCell, model: FakeViewModel, view: UICollectionView, index: IndexPath) -> FakeCollectionCell in
             return cell
         }
 
@@ -57,7 +57,7 @@ class CollectionViewDataSourceSubscriptTests: XCTestCase {
         let allSections = [section0, section1, section2]
 
         // GIVEN: a cell factory
-        let factory = CollectionViewCellFactory(reuseIdentifier: "cellId") { (cell: FakeCollectionCell, model: FakeViewModel, view: UICollectionView, index: NSIndexPath) -> FakeCollectionCell in
+        let factory = CollectionViewCellFactory(reuseIdentifier: "cellId") { (cell: FakeCollectionCell, model: FakeViewModel, view: UICollectionView, index: IndexPath) -> FakeCollectionCell in
             return cell
         }
 
@@ -83,7 +83,7 @@ class CollectionViewDataSourceSubscriptTests: XCTestCase {
         let allSections = [section0, section1]
 
         // GIVEN: a cell factory
-        let factory = CollectionViewCellFactory(reuseIdentifier: "cellId") { (cell: FakeCollectionCell, model: FakeViewModel, view: UICollectionView, index: NSIndexPath) -> FakeCollectionCell in
+        let factory = CollectionViewCellFactory(reuseIdentifier: "cellId") { (cell: FakeCollectionCell, model: FakeViewModel, view: UICollectionView, index: IndexPath) -> FakeCollectionCell in
             return cell
         }
 
@@ -91,8 +91,8 @@ class CollectionViewDataSourceSubscriptTests: XCTestCase {
         let dataSourceProvider: Provider = CollectionViewDataSourceProvider(sections: allSections, cellFactory: factory)
 
         // WHEN: we ask for an item at a specific index path
-        let item1 = dataSourceProvider[NSIndexPath(forItem: 2, inSection: 0)]
-        let item2 = dataSourceProvider[NSIndexPath(forItem: 0, inSection: 1)]
+        let item1 = dataSourceProvider[IndexPath(item: 2, section: 0)]
+        let item2 = dataSourceProvider[IndexPath(item: 0, section: 1)]
 
         // THEN: we receive the expected item
         XCTAssertEqual(item1, section0[2], "Item returned from subscript should equal expected item")
@@ -107,7 +107,7 @@ class CollectionViewDataSourceSubscriptTests: XCTestCase {
         let allSections = [section0, section1]
 
         // GIVEN: a cell factory
-        let factory = CollectionViewCellFactory(reuseIdentifier: "cellId") { (cell: FakeCollectionCell, model: FakeViewModel, view: UICollectionView, index: NSIndexPath) -> FakeCollectionCell in
+        let factory = CollectionViewCellFactory(reuseIdentifier: "cellId") { (cell: FakeCollectionCell, model: FakeViewModel, view: UICollectionView, index: IndexPath) -> FakeCollectionCell in
             return cell
         }
 
@@ -115,7 +115,7 @@ class CollectionViewDataSourceSubscriptTests: XCTestCase {
         let dataSourceProvider: Provider = CollectionViewDataSourceProvider(sections: allSections, cellFactory: factory)
 
         // WHEN: we set an item at a specific index path
-        let indexPath = NSIndexPath(forItem: 2, inSection: 0)
+        let indexPath = IndexPath(item: 2, section: 0)
         let expectedItem = FakeViewModel()
 
         dataSourceProvider[indexPath] = expectedItem

@@ -33,7 +33,7 @@ class TableViewDataSourceSubscriptTests: XCTestCase {
         let section2 = TableViewSection(items: FakeViewModel(), FakeViewModel(), footerTitle: "Footer")
 
         // GIVEN: a cell factory
-        let factory = TableViewCellFactory(reuseIdentifier: "cellid") { (cell: FakeTableCell, model: FakeViewModel, tableView: UITableView, indexPath: NSIndexPath) -> FakeTableCell in
+        let factory = TableViewCellFactory(reuseIdentifier: "cellid") { (cell: FakeTableCell, model: FakeViewModel, tableView: UITableView, indexPath: IndexPath) -> FakeTableCell in
             return cell
         }
 
@@ -56,7 +56,7 @@ class TableViewDataSourceSubscriptTests: XCTestCase {
         let section1 = TableViewSection(items: FakeViewModel(), headerTitle: "Header Title")
 
         // GIVEN: a cell factory
-        let factory = TableViewCellFactory(reuseIdentifier: "reuseId") { (cell: UITableViewCell, model: FakeViewModel, view: UITableView, index: NSIndexPath) -> UITableViewCell in
+        let factory = TableViewCellFactory(reuseIdentifier: "reuseId") { (cell: UITableViewCell, model: FakeViewModel, view: UITableView, index: IndexPath) -> UITableViewCell in
             return cell
         }
 
@@ -84,7 +84,7 @@ class TableViewDataSourceSubscriptTests: XCTestCase {
         let section1 = TableViewSection(items: FakeViewModel())
 
         // GIVEN: a cell factory
-        let factory = TableViewCellFactory(reuseIdentifier: "cellid") { (cell: FakeTableCell, model: FakeViewModel, tableView: UITableView, indexPath: NSIndexPath) -> FakeTableCell in
+        let factory = TableViewCellFactory(reuseIdentifier: "cellid") { (cell: FakeTableCell, model: FakeViewModel, tableView: UITableView, indexPath: IndexPath) -> FakeTableCell in
             return cell
         }
 
@@ -92,7 +92,7 @@ class TableViewDataSourceSubscriptTests: XCTestCase {
         let dataSourceProvider = TableViewDataSourceProvider(sections: [section0, section1], cellFactory: factory)
 
         // WHEN: we ask for an item at a specific index path
-        let indexPath = NSIndexPath(forRow: 2, inSection: 0)
+        let indexPath = IndexPath(row: 2, section: 0)
         let item = dataSourceProvider[indexPath]
 
         // THEN: we receive the expected item
@@ -106,7 +106,7 @@ class TableViewDataSourceSubscriptTests: XCTestCase {
         let section1 = TableViewSection(items: FakeViewModel())
 
         // GIVEN: a cell factory
-        let factory = TableViewCellFactory(reuseIdentifier: "reuseId") { (cell: UITableViewCell, model: FakeViewModel, view: UITableView, index: NSIndexPath) -> UITableViewCell in
+        let factory = TableViewCellFactory(reuseIdentifier: "reuseId") { (cell: UITableViewCell, model: FakeViewModel, view: UITableView, index: IndexPath) -> UITableViewCell in
             return cell
         }
 
@@ -114,7 +114,7 @@ class TableViewDataSourceSubscriptTests: XCTestCase {
         let dataSourceProvider = TableViewDataSourceProvider(sections: [section0, section1], cellFactory: factory)
 
         // WHEN: we set an item at a specific index path
-        let indexPath = NSIndexPath(forRow: 0, inSection: 1)
+        let indexPath = IndexPath(row: 0, section: 1)
         let expectedItem = FakeViewModel()
 
         dataSourceProvider[indexPath] = expectedItem

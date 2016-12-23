@@ -37,7 +37,7 @@ public struct CollectionViewCellFactory <Cell: UICollectionViewCell, Item>: Coll
 
     - returns: The configured cell.
     */
-    public typealias ConfigurationHandler = (Cell, Item, UICollectionView, NSIndexPath) -> Cell
+    public typealias ConfigurationHandler = (Cell, Item, UICollectionView, IndexPath) -> Cell
 
 
     // MARK: Properties
@@ -50,7 +50,7 @@ public struct CollectionViewCellFactory <Cell: UICollectionViewCell, Item>: Coll
     */
     public let reuseIdentifier: String
 
-    private let cellConfigurator: ConfigurationHandler
+    fileprivate let cellConfigurator: ConfigurationHandler
 
 
     // MARK: Initialization
@@ -63,7 +63,7 @@ public struct CollectionViewCellFactory <Cell: UICollectionViewCell, Item>: Coll
 
     - returns: A new `CollectionViewCellFactory` instance.
     */
-    public init(reuseIdentifier: String, cellConfigurator: ConfigurationHandler) {
+    public init(reuseIdentifier: String, cellConfigurator: @escaping ConfigurationHandler) {
         self.reuseIdentifier = reuseIdentifier
         self.cellConfigurator = cellConfigurator
     }
@@ -73,18 +73,18 @@ public struct CollectionViewCellFactory <Cell: UICollectionViewCell, Item>: Coll
 
     /// :nodoc:
     public func cellForItem(
-        item: Item,
+        _ item: Item,
         inCollectionView collectionView: UICollectionView,
-        atIndexPath indexPath: NSIndexPath) -> Cell {
-            return collectionView.dequeueReusableCellWithReuseIdentifier(reuseIdentifier, forIndexPath: indexPath) as! Cell
+        atIndexPath indexPath: IndexPath) -> Cell {
+            return collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! Cell
     }
 
     /// :nodoc:
     public func configureCell(
-        cell: Cell,
+        _ cell: Cell,
         forItem item: Item,
         inCollectionView collectionView: UICollectionView,
-        atIndexPath indexPath: NSIndexPath) -> Cell {
+        atIndexPath indexPath: IndexPath) -> Cell {
             return cellConfigurator(cell, item, collectionView, indexPath)
     }
 

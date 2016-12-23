@@ -47,14 +47,14 @@ class FakeCollectionView: UICollectionView {
 
     var dequeueSupplementaryViewExpectation: XCTestExpectation?
 
-    override func dequeueReusableCellWithReuseIdentifier(identifier: String, forIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+    override func dequeueReusableCell(withReuseIdentifier identifier: String, for indexPath: IndexPath) -> UICollectionViewCell {
         dequeueCellExpectation?.fulfill()
-        return super.dequeueReusableCellWithReuseIdentifier(identifier, forIndexPath: indexPath)
+        return super.dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath)
     }
 
-    override func dequeueReusableSupplementaryViewOfKind(elementKind: String, withReuseIdentifier identifier: String, forIndexPath indexPath: NSIndexPath) -> UICollectionReusableView {
+    override func dequeueReusableSupplementaryView(ofKind elementKind: String, withReuseIdentifier identifier: String, for indexPath: IndexPath) -> UICollectionReusableView {
         dequeueSupplementaryViewExpectation?.fulfill()
-        return super.dequeueReusableSupplementaryViewOfKind(elementKind, withReuseIdentifier: identifier, forIndexPath: indexPath)
+        return super.dequeueReusableSupplementaryView(ofKind: elementKind, withReuseIdentifier: identifier, for: indexPath)
     }
 }
 
@@ -64,11 +64,11 @@ let FakeSupplementaryViewKind = "FakeSupplementaryViewKind"
 
 class FakeFlowLayout: UICollectionViewFlowLayout {
 
-    override func layoutAttributesForSupplementaryViewOfKind(elementKind: String, atIndexPath indexPath: NSIndexPath) -> UICollectionViewLayoutAttributes? {
+    override func layoutAttributesForSupplementaryView(ofKind elementKind: String, at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
         if elementKind == FakeSupplementaryViewKind {
-            return UICollectionViewLayoutAttributes(forSupplementaryViewOfKind: elementKind, withIndexPath: indexPath)
+            return UICollectionViewLayoutAttributes(forSupplementaryViewOfKind: elementKind, with: indexPath)
         }
 
-        return super.layoutAttributesForSupplementaryViewOfKind(elementKind, atIndexPath: indexPath)
+        return super.layoutAttributesForSupplementaryView(ofKind: elementKind, at: indexPath)
     }
 }

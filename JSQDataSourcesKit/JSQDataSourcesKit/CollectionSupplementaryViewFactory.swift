@@ -38,7 +38,7 @@ public struct CollectionSupplementaryViewFactory <SupplementaryView: UICollectio
 
     - returns: The configured supplementary view.
     */
-    public typealias ConfigurationHandler = (SupplementaryView, Item, SupplementaryViewKind, UICollectionView, NSIndexPath) -> SupplementaryView
+    public typealias ConfigurationHandler = (SupplementaryView, Item, SupplementaryViewKind, UICollectionView, IndexPath) -> SupplementaryView
 
 
     // MARK: Properties
@@ -51,7 +51,7 @@ public struct CollectionSupplementaryViewFactory <SupplementaryView: UICollectio
     */
     public let reuseIdentifier: String
 
-    private let supplementaryViewConfigurator: ConfigurationHandler
+    fileprivate let supplementaryViewConfigurator: ConfigurationHandler
 
 
     // MARK: Initialization
@@ -64,7 +64,7 @@ public struct CollectionSupplementaryViewFactory <SupplementaryView: UICollectio
 
     - returns: A new `CollectionSupplementaryViewFactory` instance.
     */
-    public init(reuseIdentifier: String, supplementaryViewConfigurator: ConfigurationHandler) {
+    public init(reuseIdentifier: String, supplementaryViewConfigurator: @escaping ConfigurationHandler) {
         self.reuseIdentifier = reuseIdentifier
         self.supplementaryViewConfigurator = supplementaryViewConfigurator
     }
@@ -74,23 +74,23 @@ public struct CollectionSupplementaryViewFactory <SupplementaryView: UICollectio
 
     /// :nodoc:
     public func supplementaryViewForItem(
-        item: Item,
+        _ item: Item,
         kind: SupplementaryViewKind,
         inCollectionView collectionView: UICollectionView,
-        atIndexPath indexPath: NSIndexPath) -> SupplementaryView {
-            return collectionView.dequeueReusableSupplementaryViewOfKind(
-                kind,
+        atIndexPath indexPath: IndexPath) -> SupplementaryView {
+            return collectionView.dequeueReusableSupplementaryView(
+                ofKind: kind,
                 withReuseIdentifier: reuseIdentifier,
-                forIndexPath: indexPath) as! SupplementaryView
+                for: indexPath) as! SupplementaryView
     }
 
     /// :nodoc:
     public func configureSupplementaryView(
-        view: SupplementaryView,
+        _ view: SupplementaryView,
         forItem item: Item,
         kind: SupplementaryViewKind,
         inCollectionView collectionView: UICollectionView,
-        atIndexPath indexPath: NSIndexPath) -> SupplementaryView {
+        atIndexPath indexPath: IndexPath) -> SupplementaryView {
             return supplementaryViewConfigurator(view, item, kind, collectionView, indexPath)
     }
 

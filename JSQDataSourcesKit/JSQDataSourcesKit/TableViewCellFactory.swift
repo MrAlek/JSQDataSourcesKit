@@ -37,7 +37,7 @@ public struct TableViewCellFactory <Cell: UITableViewCell, Item>: TableViewCellF
 
     - returns: The configured cell.
     */
-    public typealias ConfigurationHandler = (Cell, Item, UITableView, NSIndexPath) -> Cell
+    public typealias ConfigurationHandler = (Cell, Item, UITableView, IndexPath) -> Cell
 
 
     // MARK: Properties
@@ -50,7 +50,7 @@ public struct TableViewCellFactory <Cell: UITableViewCell, Item>: TableViewCellF
     */
     public let reuseIdentifier: String
 
-    private let cellConfigurator: ConfigurationHandler
+    fileprivate let cellConfigurator: ConfigurationHandler
 
 
     // MARK: Initialization
@@ -63,7 +63,7 @@ public struct TableViewCellFactory <Cell: UITableViewCell, Item>: TableViewCellF
 
     - returns: A new `TableViewCellFactory` instance.
     */
-    public init(reuseIdentifier: String, cellConfigurator: ConfigurationHandler) {
+    public init(reuseIdentifier: String, cellConfigurator: @escaping ConfigurationHandler) {
         self.reuseIdentifier = reuseIdentifier
         self.cellConfigurator = cellConfigurator
     }
@@ -73,18 +73,18 @@ public struct TableViewCellFactory <Cell: UITableViewCell, Item>: TableViewCellF
 
     /// :nodoc:
     public func cellForItem(
-        item: Item,
+        _ item: Item,
         inTableView tableView: UITableView,
-        atIndexPath indexPath: NSIndexPath) -> Cell {
-            return tableView.dequeueReusableCellWithIdentifier(reuseIdentifier, forIndexPath: indexPath) as! Cell
+        atIndexPath indexPath: IndexPath) -> Cell {
+            return tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath) as! Cell
     }
 
     /// :nodoc:
     public func configureCell(
-        cell: Cell,
+        _ cell: Cell,
         forItem item: Item,
         inTableView tableView: UITableView,
-        atIndexPath indexPath: NSIndexPath) -> Cell {
+        atIndexPath indexPath: IndexPath) -> Cell {
             return cellConfigurator(cell, item, tableView, indexPath)
     }
 

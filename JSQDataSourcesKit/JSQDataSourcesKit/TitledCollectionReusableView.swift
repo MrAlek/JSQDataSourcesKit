@@ -30,19 +30,19 @@ public final class TitledCollectionReusableView: UICollectionReusableView {
     // MARK: Properties
 
     /// The label of the reusable view.
-    @IBOutlet public private(set) weak var label: UILabel!
+    @IBOutlet public fileprivate(set) weak var label: UILabel!
 
     /// The leading spacing constraint between the label and its superview.
-    @IBOutlet public private(set) weak var leadingSpacing: NSLayoutConstraint!
+    @IBOutlet public fileprivate(set) weak var leadingSpacing: NSLayoutConstraint!
 
     /// The top spacing constraint between the label and its superview.
-    @IBOutlet public private(set) weak var topSpacing: NSLayoutConstraint!
+    @IBOutlet public fileprivate(set) weak var topSpacing: NSLayoutConstraint!
 
     /// The trailing constraint between the label and its superview.
-    @IBOutlet public private(set) weak var trailingSpacing: NSLayoutConstraint!
+    @IBOutlet public fileprivate(set) weak var trailingSpacing: NSLayoutConstraint!
 
     /// The bottom spacing constraint between the label and its superview.
-    @IBOutlet public private(set) weak var bottomSpacing: NSLayoutConstraint!
+    @IBOutlet public fileprivate(set) weak var bottomSpacing: NSLayoutConstraint!
 
     /// :nodoc:
     public override var backgroundColor: UIColor? {
@@ -61,7 +61,7 @@ public final class TitledCollectionReusableView: UICollectionReusableView {
     /// The default string used to identify instances of `TitledCollectionReusableView`.
     public class var identifier: String {
         get {
-            return String(TitledCollectionReusableView.self)
+            return String(describing: TitledCollectionReusableView.self)
         }
     }
 
@@ -70,7 +70,7 @@ public final class TitledCollectionReusableView: UICollectionReusableView {
         get {
             return UINib(
                 nibName: "TitledCollectionReusableView",
-                bundle: NSBundle(forClass: TitledCollectionReusableView.self))
+                bundle: Bundle(for: TitledCollectionReusableView.self))
         }
     }
 

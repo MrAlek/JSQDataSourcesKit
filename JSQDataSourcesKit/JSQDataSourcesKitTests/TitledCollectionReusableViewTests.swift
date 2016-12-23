@@ -30,9 +30,9 @@ class TitledCollectionReusableViewTests: XCTestCase {
         XCTAssertNotNil(nib)
 
         let identifier = TitledCollectionReusableView.identifier
-        XCTAssertEqual(identifier, String(TitledCollectionReusableView.self))
+        XCTAssertEqual(identifier, String(describing: TitledCollectionReusableView.self))
 
-        let views = NSBundle(forClass: TitledCollectionReusableView.self).loadNibNamed(
+        let views = Bundle(for: TitledCollectionReusableView.self).loadNibNamed(
             "TitledCollectionReusableView",
             owner: nil,
             options: nil) as! [UIView]
@@ -62,17 +62,17 @@ class TitledCollectionReusableViewTests: XCTestCase {
     func test_ThatViewSetsBackgoundColor() {
         let view = loadView()
 
-        view.backgroundColor = .redColor()
+        view.backgroundColor = .red
 
         XCTAssertEqual(view.label.backgroundColor, view.backgroundColor)
-        XCTAssertEqual(view.label.backgroundColor, .redColor())
+        XCTAssertEqual(view.label.backgroundColor, .red)
     }
 
 
     // MARK: Helpers
 
     func loadView() -> TitledCollectionReusableView {
-        return (NSBundle(forClass: TitledCollectionReusableView.self).loadNibNamed(
+        return (Bundle(for: TitledCollectionReusableView.self).loadNibNamed(
             "TitledCollectionReusableView",
             owner: nil,
             options: nil) as! [UIView]).first as! TitledCollectionReusableView

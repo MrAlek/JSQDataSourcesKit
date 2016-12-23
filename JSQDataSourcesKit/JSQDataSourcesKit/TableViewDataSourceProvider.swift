@@ -30,8 +30,8 @@ import UIKit
  */
 public final class TableViewDataSourceProvider <
     SectionInfo: TableViewSectionInfo,
-    CellFactory: TableViewCellFactoryType
-    where CellFactory.Item == SectionInfo.Item>: CustomStringConvertible {
+    CellFactory: TableViewCellFactoryType>: CustomStringConvertible
+    where CellFactory.Item == SectionInfo.Item {
 
     // MARK: Typealiases
 
@@ -39,13 +39,13 @@ public final class TableViewDataSourceProvider <
     public typealias Item = SectionInfo.Item
 
     /// A function for reacting to a user move of a row
-    public typealias UserMovedHandler = (UITableView, CellFactory.Cell, Item,  NSIndexPath, NSIndexPath) -> Void
+    public typealias UserMovedHandler = (UITableView, CellFactory.Cell, Item,  IndexPath, IndexPath) -> Void
 
     /// A function for reacting to an insertion or deletion of a row
-    public typealias EditHandler = (UITableView, CellFactory.Cell, Item, UITableViewCellEditingStyle, NSIndexPath) -> Void
+    public typealias EditHandler = (UITableView, CellFactory.Cell, Item, UITableViewCellEditingStyle, IndexPath) -> Void
     
     /// A function for deciding if an item at a certain index path can be edited or not
-    public typealias CanEditHandler = (UITableView, Item, NSIndexPath) -> Bool
+    public typealias CanEditHandler = (UITableView, Item, IndexPath) -> Bool
     
     // MARK: Properties
 
@@ -106,7 +106,7 @@ public final class TableViewDataSourceProvider <
      - parameter indexPath: The index path of the item to return.
      - returns: The item at `indexPath`.
      */
-    public subscript (indexPath: NSIndexPath) -> Item {
+    public subscript (indexPath: IndexPath) -> Item {
         get {
             return sections[indexPath.section].items[indexPath.row]
         }
@@ -128,13 +128,13 @@ public final class TableViewDataSourceProvider <
 
     // MARK: Private
 
-    private let userMovedHandler: UserMovedHandler?
+    fileprivate let userMovedHandler: UserMovedHandler?
     
-    private let editHandler: EditHandler?
+    fileprivate let editHandler: EditHandler?
     
-    private let canEditHandler: CanEditHandler?
+    fileprivate let canEditHandler: CanEditHandler?
     
-    private lazy var bridgedDataSource: BridgedTableViewDataSource = BridgedTableViewDataSource(
+    fileprivate lazy var bridgedDataSource: BridgedTableViewDataSource = BridgedTableViewDataSource(
         numberOfSections: { [unowned self] () -> Int in
             self.sections.count
         },
@@ -156,42 +156,42 @@ public final class TableViewDataSourceProvider <
         editHandler: self.editHandler.flatMap(self.tableViewEditHandlerForEditHandler),
         canEditHandler: self.canEditHandler.flatMap(self.tableViewCanEditHandlerForCanEditHandler))
     
-    private func tableViewMoveHandlerForUserMovedHandler(userMovedHandler: UserMovedHandler) -> BridgedTableViewDataSource.MoveHandler {
+    fileprivate func tableViewMoveHandlerForUserMovedHandler(_ userMovedHandler: @escaping UserMovedHandler) -> BridgedTableViewDataSource.MoveHandler {
         
         return { [unowned self] tableView, sourceIndexPath, destinationIndexPath in
-            let item = self.sections[sourceIndexPath.section].items.removeAtIndex(sourceIndexPath.item)
-            self.sections[destinationIndexPath.section].items.insert(item, atIndex: destinationIndexPath.item)
+            let item = self.sections[sourceIndexPath.section].items.remove(at: sourceIndexPath.item)
+            self.sections[destinationIndexPath.section].items.insert(item, at: destinationIndexPath.item)
             
             // Dispatch to main queue so UITableView can update its internal state
-            NSOperationQueue.mainQueue().addOperationWithBlock {
-                if let cell = tableView.cellForRowAtIndexPath(destinationIndexPath) as? CellFactory.Cell {
+            OperationQueue.main.addOperation {
+                if let cell = tableView.cellForRow(at: destinationIndexPath) as? CellFactory.Cell {
                     userMovedHandler(tableView, cell, item, sourceIndexPath, destinationIndexPath)
                 }
             }
         }
     }
     
-    private func tableViewEditHandlerForEditHandler(editHandler: EditHandler) -> BridgedTableViewDataSource.EditHandler {
+    fileprivate func tableViewEditHandlerForEditHandler(_ editHandler: @escaping EditHandler) -> BridgedTableViewDataSource.EditHandler {
         
         return { [unowned self] tableView, editingStyle, indexPath in
-            guard let cell = tableView.cellForRowAtIndexPath(indexPath) as? CellFactory.Cell else {
+            guard let cell = tableView.cellForRow(at: indexPath) as? CellFactory.Cell else {
                 fatalError("Couldn't get cell for edited index path")
             }
             let section = self.sections[indexPath.section]
             let item = section.items[indexPath.row]
             
-            if editingStyle ~= .Delete {
+            if editingStyle ~= .delete {
                 var items = section.items
-                items.removeAtIndex(indexPath.row)
+                items.remove(at: indexPath.row)
                 self.sections[indexPath.section].items = items
-                tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+                tableView.deleteRows(at: [indexPath], with: .automatic)
             }
             
             editHandler(tableView, cell, item, editingStyle, indexPath)
         }
     }
     
-    private func tableViewCanEditHandlerForCanEditHandler(canEditHandler: CanEditHandler) -> BridgedTableViewDataSource.CanEditHandler {
+    fileprivate func tableViewCanEditHandlerForCanEditHandler(_ canEditHandler: @escaping CanEditHandler) -> BridgedTableViewDataSource.CanEditHandler {
         
         return { [unowned self] tableView, indexPath in
             let item = self.sections[indexPath.section].items[indexPath.row]
@@ -219,7 +219,7 @@ public final class TableViewFetchedResultsDataSourceProvider <CellFactory: Table
     // MARK: Properties
 
     /// Returns the fetched results controller that provides the data for the table view data source.
-    public let fetchedResultsController: NSFetchedResultsController
+    public let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>
 
     /// Returns the cell factory for this data source provider.
     public let cellFactory: CellFactory
@@ -239,10 +239,7 @@ public final class TableViewFetchedResultsDataSourceProvider <CellFactory: Table
 
     - returns: A new `TableViewFetchedResultsDataSourceProvider` instance.
     */
-    public init(fetchedResultsController: NSFetchedResultsController, cellFactory: CellFactory, tableView: UITableView? = nil) {
-        assert(fetchedResultsController: fetchedResultsController,
-            fetchesObjectsOfClass: Item.self as! AnyClass)
-
+    public init(fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>, cellFactory: CellFactory, tableView: UITableView? = nil) {
         self.fetchedResultsController = fetchedResultsController
         self.cellFactory = cellFactory
         tableView?.dataSource = dataSource
@@ -261,7 +258,7 @@ public final class TableViewFetchedResultsDataSourceProvider <CellFactory: Table
 
     // MARK: Private
 
-    private lazy var bridgedDataSource: BridgedTableViewDataSource = BridgedTableViewDataSource(
+    fileprivate lazy var bridgedDataSource: BridgedTableViewDataSource = BridgedTableViewDataSource(
         numberOfSections: { [unowned self] () -> Int in
             self.fetchedResultsController.sections?.count ?? 0
         },
@@ -269,7 +266,7 @@ public final class TableViewFetchedResultsDataSourceProvider <CellFactory: Table
             return (self.fetchedResultsController.sections?[section])?.numberOfObjects ?? 0
         },
         cellForRowAtIndexPath: { [unowned self] (tableView, indexPath) -> UITableViewCell in
-            let item = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Item
+            let item = self.fetchedResultsController.object(at: indexPath) as! Item
             let cell = self.cellFactory.cellForItem(item, inTableView: tableView, atIndexPath: indexPath)
             return self.cellFactory.configureCell(cell, forItem: item, inTableView: tableView, atIndexPath: indexPath)
         },
@@ -291,12 +288,12 @@ Keep responsibilies focused.
 
     typealias NumberOfSectionsHandler = () -> Int
     typealias NumberOfRowsInSectionHandler = (Int) -> Int
-    typealias CellForRowAtIndexPathHandler = (UITableView, NSIndexPath) -> UITableViewCell
+    typealias CellForRowAtIndexPathHandler = (UITableView, IndexPath) -> UITableViewCell
     typealias TitleForHeaderInSectionHandler = (Int) -> String?
     typealias TitleForFooterInSectionHandler = (Int) -> String?
-    typealias MoveHandler = (UITableView, NSIndexPath, NSIndexPath) -> Void
-    typealias EditHandler = (UITableView, UITableViewCellEditingStyle, NSIndexPath) -> Void
-    typealias CanEditHandler = (UITableView, NSIndexPath) -> Bool
+    typealias MoveHandler = (UITableView, IndexPath, IndexPath) -> Void
+    typealias EditHandler = (UITableView, UITableViewCellEditingStyle, IndexPath) -> Void
+    typealias CanEditHandler = (UITableView, IndexPath) -> Bool
 
     let numberOfSections: NumberOfSectionsHandler
     let numberOfRowsInSection: NumberOfRowsInSectionHandler
@@ -307,11 +304,11 @@ Keep responsibilies focused.
     let editHandler: EditHandler?
     let canEditHandler: CanEditHandler?
 
-    init(numberOfSections: NumberOfSectionsHandler,
-        numberOfRowsInSection: NumberOfRowsInSectionHandler,
-        cellForRowAtIndexPath: CellForRowAtIndexPathHandler,
-        titleForHeaderInSection: TitleForHeaderInSectionHandler,
-        titleForFooterInSection: TitleForFooterInSectionHandler,
+    init(numberOfSections: @escaping NumberOfSectionsHandler,
+        numberOfRowsInSection: @escaping NumberOfRowsInSectionHandler,
+        cellForRowAtIndexPath: @escaping CellForRowAtIndexPathHandler,
+        titleForHeaderInSection: @escaping TitleForHeaderInSectionHandler,
+        titleForFooterInSection: @escaping TitleForFooterInSectionHandler,
         moveHandler: MoveHandler? = nil,
         editHandler: EditHandler? = nil,
         canEditHandler: CanEditHandler? = nil) {
@@ -326,39 +323,39 @@ Keep responsibilies focused.
             self.canEditHandler = canEditHandler
     }
 
-    @objc func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    @objc func numberOfSections(in tableView: UITableView) -> Int {
         return numberOfSections()
     }
 
-    @objc func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    @objc func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return numberOfRowsInSection(section)
     }
 
-    @objc func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+    @objc func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         return cellForRowAtIndexPath(tableView, indexPath)
     }
 
-    @objc func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    @objc func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         return titleForHeaderInSection(section)
     }
     
-    @objc func tableView(tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+    @objc func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         return titleForFooterInSection(section)
     }
     
-    @objc func tableView(tableView: UITableView, canMoveRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+    @objc func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
         return moveHandler != nil
     }
     
-    @objc func tableView(tableView: UITableView, moveRowAtIndexPath sourceIndexPath: NSIndexPath, toIndexPath destinationIndexPath: NSIndexPath) {
+    @objc func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         moveHandler?(tableView, sourceIndexPath, destinationIndexPath)
     }
     
-    @objc func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+    @objc func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         return editHandler != nil && (canEditHandler.flatMap { $0(tableView, indexPath) } ?? true)
     }
     
-    @objc func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
+    @objc func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         editHandler?(tableView, editingStyle, indexPath)
     }
 }

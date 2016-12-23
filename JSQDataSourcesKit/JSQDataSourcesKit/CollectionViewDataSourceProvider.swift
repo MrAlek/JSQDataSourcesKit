@@ -33,8 +33,8 @@ import UIKit
 public final class CollectionViewDataSourceProvider <
     SectionInfo: CollectionViewSectionInfo,
     CellFactory: CollectionViewCellFactoryType,
-    SupplementaryViewFactory: CollectionSupplementaryViewFactoryType
-    where CellFactory.Item == SectionInfo.Item, SupplementaryViewFactory.Item == SectionInfo.Item>: CustomStringConvertible {
+    SupplementaryViewFactory: CollectionSupplementaryViewFactoryType>: CustomStringConvertible
+    where CellFactory.Item == SectionInfo.Item, SupplementaryViewFactory.Item == SectionInfo.Item {
 
     // MARK: Typealiases
 
@@ -42,7 +42,7 @@ public final class CollectionViewDataSourceProvider <
     public typealias Item = SectionInfo.Item
     
     /// A function for reacting to a user move of an item
-    public typealias UserMovedHandler = (UICollectionView, CellFactory.Cell, Item,  NSIndexPath, NSIndexPath) -> Void
+    public typealias UserMovedHandler = (UICollectionView, CellFactory.Cell, Item,  IndexPath, IndexPath) -> Void
 
 
     // MARK: Properties
@@ -108,7 +108,7 @@ public final class CollectionViewDataSourceProvider <
 
      - returns: The item at `indexPath`.
      */
-    public subscript (indexPath: NSIndexPath) -> Item {
+    public subscript (indexPath: IndexPath) -> Item {
         get {
             return sections[indexPath.section].items[indexPath.item];
         }
@@ -130,9 +130,9 @@ public final class CollectionViewDataSourceProvider <
 
     // MARK: Private
     
-    private var userMovedHandler: UserMovedHandler?
+    fileprivate var userMovedHandler: UserMovedHandler?
     
-    private lazy var bridgedDataSource: BridgedCollectionViewDataSource = BridgedCollectionViewDataSource(
+    fileprivate lazy var bridgedDataSource: BridgedCollectionViewDataSource = BridgedCollectionViewDataSource(
         numberOfSections: { [unowned self] () -> Int in
             self.sections.count
         },
@@ -160,13 +160,13 @@ public final class CollectionViewDataSourceProvider <
         },
         moveHandler: self.userMovedHandler.flatMap(self.collectionViewMoveHandlerForUserMovedHandler))
     
-    private func collectionViewMoveHandlerForUserMovedHandler(userMovedHandler: UserMovedHandler) -> BridgedCollectionViewDataSource.MoveHandler {
+    fileprivate func collectionViewMoveHandlerForUserMovedHandler(_ userMovedHandler: @escaping UserMovedHandler) -> BridgedCollectionViewDataSource.MoveHandler {
         
         return { [unowned self] collectionView, sourceIndexPath, destinationIndexPath in
-            let item = self.sections[sourceIndexPath.section].items.removeAtIndex(sourceIndexPath.item)
-            self.sections[destinationIndexPath.section].items.insert(item, atIndex: destinationIndexPath.item)
+            let item = self.sections[sourceIndexPath.section].items.remove(at: sourceIndexPath.item)
+            self.sections[destinationIndexPath.section].items.insert(item, at: destinationIndexPath.item)
             
-            guard let cell = collectionView.cellForItemAtIndexPath(destinationIndexPath) as? CellFactory.Cell else {
+            guard let cell = collectionView.cellForItem(at: destinationIndexPath) as? CellFactory.Cell else {
                 fatalError("No cell for moved item")
             }
             
@@ -185,8 +185,8 @@ public final class CollectionViewDataSourceProvider <
  */
 public final class CollectionViewFetchedResultsDataSourceProvider <
     CellFactory: CollectionViewCellFactoryType,
-    SupplementaryViewFactory: CollectionSupplementaryViewFactoryType
-    where CellFactory.Item == SupplementaryViewFactory.Item>: CustomStringConvertible {
+    SupplementaryViewFactory: CollectionSupplementaryViewFactoryType>: CustomStringConvertible
+    where CellFactory.Item == SupplementaryViewFactory.Item {
 
     // MARK: Typealiases
 
@@ -197,7 +197,7 @@ public final class CollectionViewFetchedResultsDataSourceProvider <
     // MARK: Properties
 
     /// Returns the fetched results controller that provides the data for the collection view data source.
-    public let fetchedResultsController: NSFetchedResultsController
+    public let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>
 
     /// Returns the cell factory for this data source provider.
     public let cellFactory: CellFactory
@@ -222,13 +222,10 @@ public final class CollectionViewFetchedResultsDataSourceProvider <
     - returns: A new `CollectionViewFetchedResultsDataSourceProvider` instance.
     */
     public init(
-        fetchedResultsController: NSFetchedResultsController,
+        fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>,
         cellFactory: CellFactory,
         supplementaryViewFactory: SupplementaryViewFactory? = nil,
         collectionView: UICollectionView? = nil) {
-            assert(fetchedResultsController: fetchedResultsController,
-                fetchesObjectsOfClass: Item.self as! AnyClass)
-
             self.fetchedResultsController = fetchedResultsController
             self.cellFactory = cellFactory
             self.supplementaryViewFactory = supplementaryViewFactory
@@ -248,7 +245,7 @@ public final class CollectionViewFetchedResultsDataSourceProvider <
 
     // MARK: Private
 
-    private lazy var bridgedDataSource: BridgedCollectionViewDataSource = BridgedCollectionViewDataSource(
+    fileprivate lazy var bridgedDataSource: BridgedCollectionViewDataSource = BridgedCollectionViewDataSource(
         numberOfSections: { [unowned self] () -> Int in
             self.fetchedResultsController.sections?.count ?? 0
         },
@@ -256,13 +253,13 @@ public final class CollectionViewFetchedResultsDataSourceProvider <
             return (self.fetchedResultsController.sections?[section])?.numberOfObjects ?? 0
         },
         cellForItemAtIndexPath: { [unowned self] (collectionView, indexPath) -> UICollectionViewCell in
-            let item = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Item
+            let item = self.fetchedResultsController.object(at: indexPath) as! Item
             let cell = self.cellFactory.cellForItem(item, inCollectionView: collectionView, atIndexPath: indexPath)
             return self.cellFactory.configureCell(cell, forItem: item, inCollectionView: collectionView, atIndexPath: indexPath)
         },
         supplementaryViewAtIndexPath: { [unowned self] (collectionView, kind, indexPath) -> UICollectionReusableView in
             if let factory = self.supplementaryViewFactory {
-                let item = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Item
+                let item = self.fetchedResultsController.object(at: indexPath) as! Item
                 let view = factory.supplementaryViewForItem(item, kind: kind, inCollectionView: collectionView, atIndexPath: indexPath)
                 return factory.configureSupplementaryView(view, forItem: item, kind: kind, inCollectionView: collectionView, atIndexPath: indexPath)
             }
@@ -286,9 +283,9 @@ Keep responsibilies focused.
 
     typealias NumberOfSectionsHandler = () -> Int
     typealias NumberOfItemsInSectionHandler = (Int) -> Int
-    typealias CellForItemAtIndexPathHandler = (UICollectionView, NSIndexPath) -> UICollectionViewCell
-    typealias SupplementaryViewAtIndexPathHandler = (UICollectionView, String, NSIndexPath) -> UICollectionReusableView
-    typealias MoveHandler = (UICollectionView, NSIndexPath, NSIndexPath) -> Void
+    typealias CellForItemAtIndexPathHandler = (UICollectionView, IndexPath) -> UICollectionViewCell
+    typealias SupplementaryViewAtIndexPathHandler = (UICollectionView, String, IndexPath) -> UICollectionReusableView
+    typealias MoveHandler = (UICollectionView, IndexPath, IndexPath) -> Void
     
     let numberOfSections: NumberOfSectionsHandler
     let numberOfItemsInSection: NumberOfItemsInSectionHandler
@@ -296,10 +293,10 @@ Keep responsibilies focused.
     let supplementaryViewAtIndexPath: SupplementaryViewAtIndexPathHandler
     let moveHandler: MoveHandler?
     
-    init(numberOfSections: NumberOfSectionsHandler,
-        numberOfItemsInSection: NumberOfItemsInSectionHandler,
-        cellForItemAtIndexPath: CellForItemAtIndexPathHandler,
-        supplementaryViewAtIndexPath: SupplementaryViewAtIndexPathHandler,
+    init(numberOfSections: @escaping NumberOfSectionsHandler,
+        numberOfItemsInSection: @escaping NumberOfItemsInSectionHandler,
+        cellForItemAtIndexPath: @escaping CellForItemAtIndexPathHandler,
+        supplementaryViewAtIndexPath: @escaping SupplementaryViewAtIndexPathHandler,
         moveHandler: MoveHandler? = nil) {
             
             self.numberOfSections = numberOfSections
@@ -309,32 +306,32 @@ Keep responsibilies focused.
             self.moveHandler = moveHandler
     }
 
-    @objc func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
+    @objc func numberOfSections(in collectionView: UICollectionView) -> Int {
             return numberOfSections()
     }
 
-    @objc func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    @objc func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
             return numberOfItemsInSection(section)
     }
 
     @objc func collectionView(
-        collectionView: UICollectionView,
-        cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        _ collectionView: UICollectionView,
+        cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
             return cellForItemAtIndexPath(collectionView, indexPath)
     }
 
     @objc func collectionView(
-        collectionView: UICollectionView,
+        _ collectionView: UICollectionView,
         viewForSupplementaryElementOfKind kind: SupplementaryViewKind,
-        atIndexPath indexPath: NSIndexPath) -> UICollectionReusableView {
+        at indexPath: IndexPath) -> UICollectionReusableView {
             return supplementaryViewAtIndexPath(collectionView, kind, indexPath)
     }
     
-    @objc func collectionView(collectionView: UICollectionView, canMoveItemAtIndexPath indexPath: NSIndexPath) -> Bool {
+    @objc func collectionView(_ collectionView: UICollectionView, canMoveItemAt indexPath: IndexPath) -> Bool {
         return moveHandler != nil
     }
     
-    @objc func collectionView(collectionView: UICollectionView, moveItemAtIndexPath sourceIndexPath: NSIndexPath, toIndexPath destinationIndexPath: NSIndexPath) {
+    @objc func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         moveHandler?(collectionView, sourceIndexPath, destinationIndexPath)
     }
 }

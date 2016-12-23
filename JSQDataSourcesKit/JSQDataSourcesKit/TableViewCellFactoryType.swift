@@ -45,7 +45,7 @@ public protocol TableViewCellFactoryType {
 
     - returns: An initialized or dequeued `UITableViewCell` of type `Cell`.
     */
-    func cellForItem(item: Item, inTableView tableView: UITableView, atIndexPath indexPath: NSIndexPath) -> Cell
+    func cellForItem(_ item: Item, inTableView tableView: UITableView, atIndexPath indexPath: IndexPath) -> Cell
 
     /**
      Configures and returns the specified cell.
@@ -57,5 +57,5 @@ public protocol TableViewCellFactoryType {
 
      - returns: A configured `UITableViewCell` of type `Cell`.
      */
-    func configureCell(cell: Cell, forItem item: Item, inTableView tableView: UITableView, atIndexPath indexPath: NSIndexPath) -> Cell
+    func configureCell(_ cell: Cell, forItem item: Item, inTableView tableView: UITableView, atIndexPath indexPath: IndexPath) -> Cell
 }

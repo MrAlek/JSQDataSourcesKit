@@ -19,7 +19,7 @@
 import CoreData
 
 internal func assert(
-    fetchedResultsController controller: NSFetchedResultsController,
+    fetchedResultsController controller: NSFetchedResultsController<NSFetchRequestResult>,
     fetchesObjectsOfClass objectClass: AnyClass,
     function: StaticString = #function,
     file: StaticString = #file,
@@ -28,7 +28,7 @@ internal func assert(
         let fullyQualifiedClass: AnyClass? = NSClassFromString(String(reflecting: objectClass))
 
         // check for fully-qualified class name (ModuleName.ClassName), otherwise fallback to only class name
-        let expectedClass: AnyClass = fullyQualifiedClass ?? NSClassFromString(String(objectClass))!
+        let expectedClass: AnyClass = fullyQualifiedClass ?? NSClassFromString(String(describing: objectClass))!
         assert(
             fetchedClass == expectedClass,
             "FetchedResultsController should fetch the same type of objects as CellFactory. "
