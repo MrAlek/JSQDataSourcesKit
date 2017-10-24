@@ -80,7 +80,7 @@ public struct TableViewCellFactory <Cell: UITableViewCell, Item>: TableViewCellF
     }
 
     /// :nodoc:
-    public func configureCell(
+    @discardableResult public func configureCell(
         _ cell: Cell,
         forItem item: Item,
         inTableView tableView: UITableView,

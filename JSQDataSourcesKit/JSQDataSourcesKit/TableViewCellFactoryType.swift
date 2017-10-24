@@ -57,5 +57,5 @@ public protocol TableViewCellFactoryType {
 
      - returns: A configured `UITableViewCell` of type `Cell`.
      */
-    func configureCell(_ cell: Cell, forItem item: Item, inTableView tableView: UITableView, atIndexPath indexPath: IndexPath) -> Cell
+    @discardableResult func configureCell(_ cell: Cell, forItem item: Item, inTableView tableView: UITableView, atIndexPath indexPath: IndexPath) -> Cell
 }

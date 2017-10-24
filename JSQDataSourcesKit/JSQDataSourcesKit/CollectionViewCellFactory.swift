@@ -80,7 +80,7 @@ public struct CollectionViewCellFactory <Cell: UICollectionViewCell, Item>: Coll
     }
 
     /// :nodoc:
-    public func configureCell(
+    @discardableResult public func configureCell(
         _ cell: Cell,
         forItem item: Item,
         inCollectionView collectionView: UICollectionView,

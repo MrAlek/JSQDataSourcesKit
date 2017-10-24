@@ -76,7 +76,7 @@ public final class CollectionViewFetchedResultsDelegateProvider <CellFactory: Co
     /// :nodoc:
     public var description: String {
         get {
-            return "<\(CollectionViewFetchedResultsDelegateProvider.self): collectionView=\(collectionView)>"
+            return "<\(CollectionViewFetchedResultsDelegateProvider.self): collectionView=\(String(describing: collectionView))>"
         }
     }
 
@@ -234,7 +234,7 @@ public final class TableViewFetchedResultsDelegateProvider <CellFactory: TableVi
     /// :nodoc:
     public var description: String {
         get {
-            return "<\(TableViewFetchedResultsDelegateProvider.self): tableView=\(tableView)>"
+            return "<\(TableViewFetchedResultsDelegateProvider.self): tableView=\(String(describing: tableView))>"
         }
     }
 

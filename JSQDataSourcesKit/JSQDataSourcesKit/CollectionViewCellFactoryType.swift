@@ -56,5 +56,5 @@ public protocol CollectionViewCellFactoryType {
 
      - returns: A configured `UICollectionViewCell` of type `Cell`.
      */
-    func configureCell(_ cell: Cell, forItem item: Item, inCollectionView collectionView: UICollectionView, atIndexPath indexPath: IndexPath) -> Cell
+    @discardableResult func configureCell(_ cell: Cell, forItem item: Item, inCollectionView collectionView: UICollectionView, atIndexPath indexPath: IndexPath) -> Cell
 }
