@@ -42,7 +42,7 @@ public final class CollectionViewDataSourceProvider <
     public typealias Item = SectionInfo.Item
     
     /// A function for reacting to a user move of an item
-    public typealias UserMovedHandler = (UICollectionView, CellFactory.Cell, Item,  IndexPath, IndexPath) -> Void
+    public typealias UserMovedHandler = (UICollectionView, Item,  IndexPath, IndexPath) -> Void
 
 
     // MARK: Properties
@@ -165,12 +165,8 @@ public final class CollectionViewDataSourceProvider <
         return { [unowned self] collectionView, sourceIndexPath, destinationIndexPath in
             let item = self.sections[sourceIndexPath.section].items.remove(at: sourceIndexPath.item)
             self.sections[destinationIndexPath.section].items.insert(item, at: destinationIndexPath.item)
-            
-            guard let cell = collectionView.cellForItem(at: destinationIndexPath) as? CellFactory.Cell else {
-                fatalError("No cell for moved item")
-            }
-            
-            userMovedHandler(collectionView, cell, item, sourceIndexPath, destinationIndexPath)
+
+            userMovedHandler(collectionView, item, sourceIndexPath, destinationIndexPath)
         }
     }
 }
